@@ -1,31 +1,7 @@
 import os
 import hashlib
-import sqlite3
+import argparse
 from datetime import datetime
-
-# Creates SQLite3 database and table for storing file metadata
-def create_db():
-    
-    # Connect to database
-    db_connection = sqlite3.connect("files.db")
-    cursor = db_connection.cursor()
-
-    create_table_query = """
-    CREATE TABLE IF NOT EXISTS tblFileIntegrity (
-        file_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        path TEXT UNIQUE NOT NULL,
-        hash TEXT NOT NULL,
-        size INTEGER,
-        last_modified TIMESTAMP
-    );
-    """
-
-    # Create the table
-    cursor.execute(create_table_query)
-
-    # Commit changes and close connection
-    db_connection.commit()
-    db_connection.close()
 
 # Calculates the Blake2 hash of a file
 def blake2_hash(filepath):
@@ -35,38 +11,43 @@ def blake2_hash(filepath):
             hasher.update(chunk)
     return hasher.hexdigest()
 
-# Traverse filesystem, hash each file, and store metadata in database
-def traverse_filesystem():
+# Traverse filesystem, hash each file, and store metadata
+def new_baseline():
     
-    with sqlite3.connect("files.db") as db_connection:
-        cursor = db_connection.cursor()
-    
+    # Log file for any access errors
+    with open("access_errors.log", "a") as log_file, open("baseline.txt", "w") as metadata_file:
+
         for dirpath, dirnames, filenames in os.walk("/"):
             for filename in filenames:
                 filepath = os.path.join(dirpath, filename)
                 try:
+                    # Get file metadata
                     file_hash = blake2_hash(filepath)
                     file_size = os.path.getsize(filepath)
                     file_timestamp = os.path.getmtime(filepath)
                     file_last_modified = datetime.fromtimestamp(file_timestamp).strftime('%Y-%m-%d %H:%M:%S')
-                    
-                    insert_query = """
-                    INSERT INTO tblFileIntegrity (path, hash, size, last_modified) VALUES (?, ?, ?, ?);
-                    """
-                    try:
-                        cursor.execute(insert_query, (filepath, file_hash, file_size, file_last_modified))
-                    except sqlite3.IntegrityError:
-                        # Handle duplicate entries without overwriting
-                        print(f"Entry already exists for {filepath}, skipping.")
 
+                    # Write to metadata file
+                    metadata_file.write(f"{filepath}:{file_hash}:{file_size}:{file_last_modified}\n")
+
+                # Handle cases where the file can't be accessed
                 except (PermissionError, FileNotFoundError, OSError) as e:
-                    # Handle cases where the file can't be accessed
-                    print(f"Skipping {filepath}: {e}")
-        db_connection.commit()
+                    # Write to error log
+                    log_file.write(f"{datetime.now()} Skipping {filepath}: {e}\n")
+                    #print(f"Skipping {filepath}: {e}")
+
+#def start_monitor():
 
 def main():
-    create_db()
-    traverse_filesystem()
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-n", "--new-baseline", help="Create a new system baseline", action="store_false")
+    parser.add_argument("-b", "--baseline", help="Run against system baseline", action="store_true")
+    
+    args = parser.parse_args()
+
+    if args.new_baseline:
+        new_baseline()
 
 if __name__ == "__main__":
     main()
