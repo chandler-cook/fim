@@ -48,7 +48,7 @@ underground_password="Und3rground_123"
 if [[ $1 == "anonymous" ]]; then
     for user in "${anonymous_sudo_users[@]}"; do
         if ! id "$user" &>/dev/null; then
-            sudo useradd "$user"
+            sudo useradd -m "$user"
             echo "$user:$anonymous_password" | sudo chpasswd
             sudo usermod -aG sudo "$user"
         fi
@@ -56,14 +56,14 @@ if [[ $1 == "anonymous" ]]; then
 
     for user in "${anonymous_normal_users[@]}"; do
         if ! id "$user" &>/dev/null; then
-            sudo useradd "$user"
+            sudo useradd -m "$user"
             echo "$user:$anonymous_password" | sudo chpasswd
         fi
     done
 elif [[ $1 == "underground" ]]; then
     for user in "${underground_sudo_users[@]}"; do
         if ! id "$user" &>/dev/null; then
-            sudo useradd "$user"
+            sudo useradd -m "$user"
             echo "$user:$underground_password" | sudo chpasswd
             sudo usermod -aG sudo "$user"
         fi
@@ -71,7 +71,7 @@ elif [[ $1 == "underground" ]]; then
 
     for user in "${underground_normal_users[@]}"; do
         if ! id "$user" &>/dev/null; then
-            sudo useradd "$user"
+            sudo useradd -m "$user"
             echo "$user:$underground_password" | sudo chpasswd
         fi
     done
