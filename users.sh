@@ -43,7 +43,7 @@ underground_normal_users=(
 )
 
 anonymous_password="An0nymous_123"
-underground_password="Und3rground_123"
+underground_password="Und3rgr0und_123"
 
 if [[ $1 == "anonymous" ]]; then
     for user in "${anonymous_sudo_users[@]}"; do
@@ -65,7 +65,7 @@ elif [[ $1 == "underground" ]]; then
         if ! id "$user" &>/dev/null; then
             sudo useradd -m "$user"
             echo "$user:$underground_password" | sudo chpasswd
-            sudo usermod -aG sudo "$user"
+            sudo usermod -aG wheel "$user"
         fi
     done
 
