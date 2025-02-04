@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 
 PASSWORD = os.getenv("ENCRYPTION_PASSWORD", "your-secure-password")
-TARGET_DIRECTORY = "/home"
+TARGET_DIRECTORY = "/home/user/Desktop"
 
 def derive_key(password: str, salt: bytes) -> bytes:
     kdf = PBKDF2HMAC(
